@@ -1,2 +1,2 @@
 # Kqlier
-Format your KQL filles
+Format your KQL files
