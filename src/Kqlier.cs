@@ -25,18 +25,28 @@ public static class Kqlier
 
     public static int Check()
     {
-        throw new NotImplementedException();
+        var filesToFormat = GetFiles();
+
+        return filesToFormat.Select(CheckFile).Any(result => result != 0) ? 1 : 0;
     }
 
     public static int Check(FileInfo file)
     {
-        throw new NotImplementedException();
+        return CheckFile(file);
     }
 
     private static IEnumerable<FileInfo> GetFiles()
     {
         var directoryInfo = new DirectoryInfo(Directory.GetCurrentDirectory());
         return directoryInfo.EnumerateFiles("*.kql", SearchOption.AllDirectories);
+    }
+
+    private static int CheckFile(FileInfo file)
+    {
+        var (originalText, _) = ReadFile(file);
+        var formattedText = FormatKql(originalText);
+
+        return !string.Equals(originalText, formattedText, StringComparison.Ordinal) ? 1 : 0;
     }
 
     private static void FormatFile(FileInfo file)
