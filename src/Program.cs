@@ -20,14 +20,8 @@ internal static class Program
         {
             var fileInfo = parseResult.GetValue(fileOption);
             var checkInfo = parseResult.GetValue(checkOption);
-            if (checkInfo)
-            {
-                return fileInfo != null ? Kqlier.Check(fileInfo) : Kqlier.Check();
-            }
-
-            return fileInfo != null ? Kqlier.Format(fileInfo) : Kqlier.Format();
+            return Kqlier.Run(fileInfo, checkInfo);
         });
-
         var parseResult = rootCommand.Parse(args);
         return parseResult.Invoke();
     }

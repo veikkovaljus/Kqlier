@@ -6,33 +6,49 @@ namespace Kqlier;
 
 public static class Kqlier
 {
-    public static int Format()
+    public static int Run(FileInfo? fileInfo, bool check)
+    {
+        if (check)
+        {
+            return fileInfo != null ? Check(fileInfo) : Check();
+        }
+
+        return fileInfo != null ? Format(fileInfo) : Format();
+    }
+
+    private static int Format()
     {
         var filesToFormat = GetFiles();
 
+        var count = 0;
         foreach (var file in filesToFormat)
         {
             FormatFile(file);
+            count++;
         }
+
+        Console.WriteLine($"Formatted {count} files");
         return 0;
     }
 
-    public static int Format(FileInfo file)
+    private static int Format(FileInfo file)
     {
         FormatFile(file);
+        Console.WriteLine($"Formatted {file.Name}");
         return 0;
     }
 
-    public static int Check()
+    private static int Check()
     {
         var filesToFormat = GetFiles();
-
         return filesToFormat.Select(CheckFile).Any(result => result != 0) ? 1 : 0;
     }
 
-    public static int Check(FileInfo file)
+    private static int Check(FileInfo file)
     {
-        return CheckFile(file);
+        var result = CheckFile(file);
+        Console.WriteLine($"Checked {file.Name}");
+        return result;
     }
 
     private static IEnumerable<FileInfo> GetFiles()
@@ -69,6 +85,20 @@ public static class Kqlier
 
     private static (string Text, Encoding Encoding) ReadFile(FileInfo file)
     {
+        // Check for UTF-8 BOM before reading
+        bool hasUtf8Bom = false;
+        using (
+            var fs = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read)
+        )
+        {
+            if (fs.Length >= 3)
+            {
+                var bom = new byte[3];
+                fs.ReadExactly(bom, 0, 3);
+                hasUtf8Bom = bom[0] == 0xEF && bom[1] == 0xBB && bom[2] == 0xBF;
+            }
+        }
+
         using var stream = new FileStream(
             file.FullName,
             FileMode.Open,
@@ -84,6 +114,12 @@ public static class Kqlier
 
         var text = reader.ReadToEnd();
         var encoding = reader.CurrentEncoding;
+
+        // If UTF-8 without BOM, use encoding that won't emit BOM
+        if (encoding.CodePage == 65001 && !hasUtf8Bom)
+        {
+            encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+        }
 
         return (text, encoding);
     }
