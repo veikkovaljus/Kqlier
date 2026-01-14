@@ -9,7 +9,7 @@ internal static class Program
         Option<FileInfo> fileOption = new("--file") { Description = "The file to format" };
         Option<bool> checkOption = new("--check")
         {
-            Description = "Checks if all files all formatted",
+            Description = "Checks if all files are formatted",
         };
 
         RootCommand rootCommand = new("Tool for formatting .kql files");
