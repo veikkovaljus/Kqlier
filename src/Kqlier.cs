@@ -85,43 +85,32 @@ public static class Kqlier
 
     private static (string Text, Encoding Encoding) ReadFile(FileInfo file)
     {
-        // Check for UTF-8 BOM before reading
-        bool hasUtf8Bom = false;
-        using (
-            var fs = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read)
-        )
+        var bytes = File.ReadAllBytes(file.FullName);
+
+        // Check for UTF-16 BE BOM (FE FF)
+        if (bytes.Length >= 2 && bytes[0] == 0xFE && bytes[1] == 0xFF)
         {
-            if (fs.Length >= 3)
-            {
-                var bom = new byte[3];
-                fs.ReadExactly(bom, 0, 3);
-                hasUtf8Bom = bom[0] == 0xEF && bom[1] == 0xBB && bom[2] == 0xBF;
-            }
+            var encoding = new UnicodeEncoding(bigEndian: true, byteOrderMark: true);
+            return (encoding.GetString(bytes, 2, bytes.Length - 2), encoding);
         }
 
-        using var stream = new FileStream(
-            file.FullName,
-            FileMode.Open,
-            FileAccess.Read,
-            FileShare.Read
-        );
-
-        using var reader = new StreamReader(
-            stream,
-            encoding: Encoding.UTF8,
-            detectEncodingFromByteOrderMarks: true
-        );
-
-        var text = reader.ReadToEnd();
-        var encoding = reader.CurrentEncoding;
-
-        // If UTF-8 without BOM, use encoding that won't emit BOM
-        if (encoding.CodePage == 65001 && !hasUtf8Bom)
+        // Check for UTF-16 LE BOM (FF FE)
+        if (bytes.Length >= 2 && bytes[0] == 0xFF && bytes[1] == 0xFE)
         {
-            encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+            var encoding = new UnicodeEncoding(bigEndian: false, byteOrderMark: true);
+            return (encoding.GetString(bytes, 2, bytes.Length - 2), encoding);
         }
 
-        return (text, encoding);
+        // Check for UTF-8 BOM (EF BB BF)
+        if (bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF)
+        {
+            var encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: true);
+            return (encoding.GetString(bytes, 3, bytes.Length - 3), encoding);
+        }
+
+        // Default: UTF-8 without BOM
+        var utf8NoBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+        return (utf8NoBom.GetString(bytes), utf8NoBom);
     }
 
     private static void WriteFile(FileInfo file, string text, Encoding encoding)
