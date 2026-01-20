@@ -17,11 +17,32 @@ kqlier
 # Format a single file
 kqlier --file query.kql
 
-# Check if files are formatted
+# Check if files are formatted (exit 1 if any need formatting)
 kqlier --check
 
 # Check a single file
 kqlier --check --file query.kql
+
+# Format from stdin, output to stdout
+echo "StormEvents|where x==1" | kqlier --stdin
+
+# Check stdin content
+cat query.kql | kqlier --stdin --check
+```
+
+## Output
+
+Format mode shows how many files were modified:
+```
+Formatted 3 of 5 files
+```
+
+Check mode lists files that need formatting:
+```
+Checked 5 files, 2 need formatting
+Files not formatted:
+  /path/to/query1.kql
+  /path/to/query2.kql
 ```
 
 ## Exit Codes

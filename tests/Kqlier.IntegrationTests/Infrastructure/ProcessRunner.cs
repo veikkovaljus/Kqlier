@@ -7,8 +7,14 @@ public record ProcessResult(int ExitCode, string StandardOutput, string Standard
 
 public static class ProcessRunner
 {
+    public static Task<ProcessResult> RunKqlierAsync(string workingDirectory, params string[] args)
+    {
+        return RunKqlierAsync(workingDirectory, stdinInput: null, args);
+    }
+
     public static async Task<ProcessResult> RunKqlierAsync(
         string workingDirectory,
+        string? stdinInput,
         params string[] args
     )
     {
@@ -25,6 +31,7 @@ public static class ProcessRunner
             WorkingDirectory = workingDirectory,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
+            RedirectStandardInput = stdinInput != null,
             UseShellExecute = false,
             CreateNoWindow = true,
         };
@@ -49,6 +56,12 @@ public static class ProcessRunner
         process.Start();
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
+
+        if (stdinInput != null)
+        {
+            await process.StandardInput.WriteAsync(stdinInput);
+            process.StandardInput.Close();
+        }
 
         await process.WaitForExitAsync();
 

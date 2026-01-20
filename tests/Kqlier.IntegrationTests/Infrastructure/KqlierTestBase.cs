@@ -14,6 +14,11 @@ public abstract class KqlierTestBase : IDisposable
         return ProcessRunner.RunKqlierAsync(TempDir.RootPath, args);
     }
 
+    protected Task<ProcessResult> RunKqlierWithStdinAsync(string stdinInput, params string[] args)
+    {
+        return ProcessRunner.RunKqlierAsync(TempDir.RootPath, stdinInput, args);
+    }
+
     public void Dispose()
     {
         TempDir.Dispose();

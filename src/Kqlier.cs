@@ -6,14 +6,36 @@ namespace Kqlier;
 
 public static class Kqlier
 {
-    public static int Run(FileInfo? fileInfo, bool check)
+    public static int Run(FileInfo? fileInfo, bool check, bool stdin)
     {
+        if (stdin)
+        {
+            return check ? CheckStdin() : FormatStdin();
+        }
+
         if (check)
         {
             return fileInfo != null ? Check(fileInfo) : Check();
         }
 
         return fileInfo != null ? Format(fileInfo) : Format();
+    }
+
+    private static int FormatStdin()
+    {
+        var input = Console.In.ReadToEnd();
+        var formatted = FormatKql(input);
+        Console.Write(formatted);
+        return 0;
+    }
+
+    private static int CheckStdin()
+    {
+        var input = Console.In.ReadToEnd();
+        var formatted = FormatKql(input);
+        var needsFormatting = !string.Equals(input, formatted, StringComparison.Ordinal);
+        Console.Error.WriteLine(needsFormatting ? "Input needs formatting" : "Input is formatted");
+        return needsFormatting ? 1 : 0;
     }
 
     private static int Format()
