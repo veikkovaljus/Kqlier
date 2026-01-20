@@ -54,12 +54,33 @@ public sealed class TempDirectoryFixture : IDisposable
         return File.GetLastWriteTimeUtc(Path.Combine(RootPath, relativePath));
     }
 
+    public void SetFileMode(string relativePath, UnixFileMode mode)
+    {
+        var fullPath = Path.Combine(RootPath, relativePath);
+        File.SetUnixFileMode(fullPath, mode);
+    }
+
     public void Dispose()
     {
         try
         {
             if (Directory.Exists(RootPath))
             {
+                // Restore permissions on all files to allow deletion
+                foreach (
+                    var file in Directory.EnumerateFiles(RootPath, "*", SearchOption.AllDirectories)
+                )
+                {
+                    try
+                    {
+                        File.SetUnixFileMode(file, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+                    }
+                    catch
+                    {
+                        // Ignore permission errors during cleanup
+                    }
+                }
+
                 Directory.Delete(RootPath, recursive: true);
             }
         }

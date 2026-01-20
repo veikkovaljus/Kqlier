@@ -42,13 +42,32 @@ public static class Kqlier
     {
         var files = GetFiles().ToList();
         var modified = 0;
+        var errors = new List<(FileInfo file, string error)>();
+
         foreach (var file in files)
         {
-            if (FormatFile(file))
-                modified++;
+            try
+            {
+                if (FormatFile(file))
+                    modified++;
+            }
+            catch (Exception ex)
+                when (ex is FileNotFoundException or UnauthorizedAccessException or IOException)
+            {
+                errors.Add((file, ex.Message));
+            }
         }
+
         Console.WriteLine($"Formatted {modified} of {files.Count} files");
-        return 0;
+
+        if (errors.Count > 0)
+        {
+            Console.Error.WriteLine($"Errors occurred in {errors.Count} file(s):");
+            foreach (var (file, error) in errors)
+                Console.Error.WriteLine($"  {file.FullName}: {error}");
+        }
+
+        return errors.Count > 0 ? 1 : 0;
     }
 
     private static int Format(FileInfo file)
@@ -64,11 +83,20 @@ public static class Kqlier
     {
         var files = GetFiles().ToList();
         var failedFiles = new List<FileInfo>();
+        var errors = new List<(FileInfo file, string error)>();
 
         foreach (var file in files)
         {
-            if (CheckFile(file) != 0)
-                failedFiles.Add(file);
+            try
+            {
+                if (CheckFile(file) != 0)
+                    failedFiles.Add(file);
+            }
+            catch (Exception ex)
+                when (ex is FileNotFoundException or UnauthorizedAccessException or IOException)
+            {
+                errors.Add((file, ex.Message));
+            }
         }
 
         Console.WriteLine($"Checked {files.Count} files, {failedFiles.Count} need formatting");
@@ -77,10 +105,17 @@ public static class Kqlier
         {
             Console.WriteLine("Files not formatted:");
             foreach (var file in failedFiles)
-                Console.WriteLine($"{file.FullName}");
+                Console.WriteLine($"  {file.FullName}");
         }
 
-        return failedFiles.Count > 0 ? 1 : 0;
+        if (errors.Count > 0)
+        {
+            Console.Error.WriteLine($"Errors occurred in {errors.Count} file(s):");
+            foreach (var (file, error) in errors)
+                Console.Error.WriteLine($"  {file.FullName}: {error}");
+        }
+
+        return (failedFiles.Count > 0 || errors.Count > 0) ? 1 : 0;
     }
 
     private static int Check(FileInfo file)
