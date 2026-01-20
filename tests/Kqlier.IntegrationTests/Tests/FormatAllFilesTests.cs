@@ -36,7 +36,7 @@ public class FormatAllFilesTests : KqlierTestBase
         Assert.Equal(TestFileFactory.FormattedKql, TempDir.ReadFile("file1.kql"));
         Assert.Equal(TestFileFactory.FormattedKql, TempDir.ReadFile("file2.kql"));
         Assert.Equal(TestFileFactory.FormattedKql, TempDir.ReadFile("file3.kql"));
-        Assert.Contains("Formatted 3 files", result.StandardOutput);
+        Assert.Contains("Formatted 3 of 3 files", result.StandardOutput);
     }
 
     [Fact]
@@ -55,7 +55,7 @@ public class FormatAllFilesTests : KqlierTestBase
         Assert.Equal(TestFileFactory.FormattedKql, TempDir.ReadFile("root.kql"));
         Assert.Equal(TestFileFactory.FormattedKql, TempDir.ReadFile("sub1/file1.kql"));
         Assert.Equal(TestFileFactory.FormattedKql, TempDir.ReadFile("sub1/sub2/file2.kql"));
-        Assert.Contains("Formatted 3 files", result.StandardOutput);
+        Assert.Contains("Formatted 3 of 3 files", result.StandardOutput);
     }
 
     [Fact]
@@ -68,7 +68,7 @@ public class FormatAllFilesTests : KqlierTestBase
 
         // Assert
         Assert.Equal(0, result.ExitCode);
-        Assert.Contains("Formatted 0 files", result.StandardOutput);
+        Assert.Contains("Formatted 0 of 0 files", result.StandardOutput);
     }
 
     [Fact]
@@ -84,7 +84,7 @@ public class FormatAllFilesTests : KqlierTestBase
 
         // Assert
         Assert.Equal(0, result.ExitCode);
-        Assert.Contains("Formatted 0 files", result.StandardOutput);
+        Assert.Contains("Formatted 0 of 0 files", result.StandardOutput);
         // Verify files are unchanged
         Assert.Equal(TestFileFactory.UnformattedKql, TempDir.ReadFile("test.txt"));
         Assert.Equal(TestFileFactory.UnformattedKql, TempDir.ReadFile("test.sql"));

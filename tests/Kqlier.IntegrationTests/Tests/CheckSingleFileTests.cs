@@ -16,7 +16,7 @@ public class CheckSingleFileTests : KqlierTestBase
 
         // Assert
         Assert.Equal(0, result.ExitCode);
-        Assert.Contains("Checked test.kql", result.StandardOutput);
+        Assert.Contains("test.kql is formatted", result.StandardOutput);
     }
 
     [Fact]

@@ -18,37 +18,56 @@ public static class Kqlier
 
     private static int Format()
     {
-        var filesToFormat = GetFiles();
-
-        var count = 0;
-        foreach (var file in filesToFormat)
+        var files = GetFiles().ToList();
+        var modified = 0;
+        foreach (var file in files)
         {
-            FormatFile(file);
-            count++;
+            if (FormatFile(file))
+                modified++;
         }
-
-        Console.WriteLine($"Formatted {count} files");
+        Console.WriteLine($"Formatted {modified} of {files.Count} files");
         return 0;
     }
 
     private static int Format(FileInfo file)
     {
-        FormatFile(file);
-        Console.WriteLine($"Formatted {file.Name}");
+        var wasModified = FormatFile(file);
+        Console.WriteLine(
+            wasModified ? $"Formatted {file.Name}" : $"{file.Name} already formatted"
+        );
         return 0;
     }
 
     private static int Check()
     {
-        var filesToFormat = GetFiles();
-        return filesToFormat.Select(CheckFile).Any(result => result != 0) ? 1 : 0;
+        var files = GetFiles().ToList();
+        var failedFiles = new List<FileInfo>();
+
+        foreach (var file in files)
+        {
+            if (CheckFile(file) != 0)
+                failedFiles.Add(file);
+        }
+
+        Console.WriteLine($"Checked {files.Count} files, {failedFiles.Count} need formatting");
+
+        if (failedFiles.Count > 0)
+        {
+            Console.WriteLine("Files not formatted:");
+            foreach (var file in failedFiles)
+                Console.WriteLine($"{file.FullName}");
+        }
+
+        return failedFiles.Count > 0 ? 1 : 0;
     }
 
     private static int Check(FileInfo file)
     {
-        var result = CheckFile(file);
-        Console.WriteLine($"Checked {file.Name}");
-        return result;
+        var needsFormatting = CheckFile(file) != 0;
+        Console.WriteLine(
+            needsFormatting ? $"{file.Name} needs formatting" : $"{file.Name} is formatted"
+        );
+        return needsFormatting ? 1 : 0;
     }
 
     private static IEnumerable<FileInfo> GetFiles()
@@ -65,7 +84,7 @@ public static class Kqlier
         return !string.Equals(originalText, formattedText, StringComparison.Ordinal) ? 1 : 0;
     }
 
-    private static void FormatFile(FileInfo file)
+    private static bool FormatFile(FileInfo file)
     {
         var (originalText, encoding) = ReadFile(file);
         var formattedText = FormatKql(originalText);
@@ -73,7 +92,9 @@ public static class Kqlier
         if (!string.Equals(originalText, formattedText, StringComparison.Ordinal))
         {
             WriteFile(file, formattedText, encoding);
+            return true;
         }
+        return false;
     }
 
     private static string FormatKql(string text)

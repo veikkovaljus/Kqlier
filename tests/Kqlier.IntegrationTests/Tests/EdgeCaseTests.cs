@@ -73,7 +73,7 @@ public class EdgeCaseTests : KqlierTestBase
 
         // Assert
         Assert.Equal(0, result.ExitCode);
-        Assert.Contains("Formatted 20 files", result.StandardOutput);
+        Assert.Contains("Formatted 20 of 20 files", result.StandardOutput);
 
         // Verify all files are formatted
         for (int i = 0; i < 20; i++)
