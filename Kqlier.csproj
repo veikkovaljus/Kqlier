@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackAsTool>true</PackAsTool>
     <PackageId>kqlier</PackageId>
     <ToolCommandName>kqlier</ToolCommandName>
-    <Version>0.1.2</Version>
+    <Version>0.1.3</Version>
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <Authors>veikkovaljus</Authors>
     <Description>A CLI tool for formatting KQL (Kusto Query Language) files</Description>
@@ -22,7 +22,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Azure.Kusto.Language" Version="12.3.2" />
-    <PackageReference Include="System.CommandLine" Version="2.0.1" />
+    <PackageReference Include="System.CommandLine" Version="2.0.2" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="tests\**" />
