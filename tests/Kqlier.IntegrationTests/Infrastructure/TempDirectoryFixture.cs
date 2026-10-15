@@ -56,6 +56,11 @@ public sealed class TempDirectoryFixture : IDisposable
 
     public void SetFileMode(string relativePath, UnixFileMode mode)
     {
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
         var fullPath = Path.Combine(RootPath, relativePath);
         File.SetUnixFileMode(fullPath, mode);
     }
@@ -66,18 +71,24 @@ public sealed class TempDirectoryFixture : IDisposable
         {
             if (Directory.Exists(RootPath))
             {
-                // Restore permissions on all files to allow deletion
-                foreach (
-                    var file in Directory.EnumerateFiles(RootPath, "*", SearchOption.AllDirectories)
-                )
+                if (!OperatingSystem.IsWindows())
                 {
-                    try
+                    foreach (
+                        var file in Directory.EnumerateFiles(
+                            RootPath,
+                            "*",
+                            SearchOption.AllDirectories
+                        )
+                    )
                     {
-                        File.SetUnixFileMode(file, UnixFileMode.UserRead | UnixFileMode.UserWrite);
-                    }
-                    catch
-                    {
-                        // Ignore permission errors during cleanup
+                        try
+                        {
+                            File.SetUnixFileMode(file, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+                        }
+                        catch
+                        {
+                            // Ignore permission errors during cleanup
+                        }
                     }
                 }
 

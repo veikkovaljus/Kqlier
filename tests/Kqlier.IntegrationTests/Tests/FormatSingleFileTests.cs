@@ -69,9 +69,9 @@ public class FormatSingleFileTests : KqlierTestBase
     {
         // Arrange
         var filePath = TempDir.CreateFile("test.kql", TestFileFactory.AlreadyFormattedKql);
-        await Task.Delay(100);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
         var originalTime = TempDir.GetLastWriteTime("test.kql");
-        await Task.Delay(100);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
 
         // Act
         var result = await RunKqlierAsync("--file", filePath);

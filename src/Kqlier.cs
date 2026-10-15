@@ -198,18 +198,37 @@ public static class Kqlier
 
     private static void WriteFile(FileInfo file, string text, Encoding encoding)
     {
-        var tempFile = Path.GetTempFileName();
+        var directory = file.DirectoryName ?? Directory.GetCurrentDirectory();
+        var tempFile = Path.Combine(directory, $".{file.Name}.{Guid.NewGuid():N}.tmp");
 
-        using (
-            var stream = new FileStream(tempFile, FileMode.Create, FileAccess.Write, FileShare.None)
-        )
-        using (var writer = new StreamWriter(stream, encoding))
+        try
         {
-            writer.Write(text);
-        }
+            var attributes = File.GetAttributes(file.FullName);
 
-        var attributes = File.GetAttributes(file.FullName);
-        File.Move(tempFile, file.FullName, overwrite: true);
-        File.SetAttributes(file.FullName, attributes);
+            using (
+                var stream = new FileStream(
+                    tempFile,
+                    FileMode.CreateNew,
+                    FileAccess.Write,
+                    FileShare.None
+                )
+            )
+            using (var writer = new StreamWriter(stream, encoding))
+            {
+                writer.Write(text);
+            }
+
+            File.SetAttributes(tempFile, attributes);
+            if (!OperatingSystem.IsWindows())
+            {
+                File.SetUnixFileMode(tempFile, File.GetUnixFileMode(file.FullName));
+            }
+
+            File.Move(tempFile, file.FullName, overwrite: true);
+        }
+        finally
+        {
+            File.Delete(tempFile);
+        }
     }
 }

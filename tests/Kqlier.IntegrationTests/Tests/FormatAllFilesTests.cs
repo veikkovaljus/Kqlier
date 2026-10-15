@@ -96,9 +96,9 @@ public class FormatAllFilesTests : KqlierTestBase
     {
         // Arrange
         TempDir.CreateFile("test.kql", TestFileFactory.AlreadyFormattedKql);
-        await Task.Delay(100); // Ensure timestamp resolution
+        await Task.Delay(100, TestContext.Current.CancellationToken); // Ensure timestamp resolution
         var originalTime = TempDir.GetLastWriteTime("test.kql");
-        await Task.Delay(100);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
 
         // Act
         var result = await RunKqlierAsync();
@@ -115,9 +115,9 @@ public class FormatAllFilesTests : KqlierTestBase
         // Arrange
         TempDir.CreateFile("formatted.kql", TestFileFactory.AlreadyFormattedKql);
         TempDir.CreateFile("unformatted.kql", TestFileFactory.UnformattedKql);
-        await Task.Delay(100);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
         var formattedTime = TempDir.GetLastWriteTime("formatted.kql");
-        await Task.Delay(100);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
 
         // Act
         var result = await RunKqlierAsync();
