@@ -39,13 +39,39 @@ public class ErrorHandlingTests : KqlierTestBase
     }
 
     [Fact]
+    public async Task Format_InvalidKql_ReportsDiagnosticsAndDoesNotRewrite()
+    {
+        // Arrange
+        TempDir.CreateFile("bad.kql", "StormEvents | where x ==");
+
+        // Act
+        var result = await RunKqlierAsync("format", ".");
+
+        // Assert - reported as an error, exit 2, file left untouched
+        Assert.Equal(2, result.ExitCode);
+        Assert.Contains("Errors occurred in 1 file(s):", result.StandardError);
+        Assert.Equal("StormEvents | where x ==", TempDir.ReadFile("bad.kql"));
+    }
+
+    [Fact]
+    public async Task Check_InvalidKql_ReportsDiagnosticsAndReturnsError()
+    {
+        // Arrange
+        TempDir.CreateFile("bad.kql", "StormEvents | where x ==");
+
+        // Act
+        var result = await RunKqlierAsync("check", ".");
+
+        // Assert
+        Assert.Equal(2, result.ExitCode);
+        Assert.Contains("Errors occurred in 1 file(s):", result.StandardError);
+    }
+
+    [Fact]
     [Trait("Category", "Unix")]
     public async Task FormatAll_UnreadableFile_ContinuesAndReportsError()
     {
-        if (!IsUnix)
-        {
-            return; // Skip on non-Unix platforms
-        }
+        Assert.SkipUnless(IsUnix, "Unix file modes only apply on Unix.");
 
         // Arrange
         TempDir.CreateFile("readable.kql", TestFileFactory.UnformattedKql);
@@ -68,10 +94,7 @@ public class ErrorHandlingTests : KqlierTestBase
     [Trait("Category", "Unix")]
     public async Task CheckAll_UnreadableFile_ContinuesAndReportsError()
     {
-        if (!IsUnix)
-        {
-            return; // Skip on non-Unix platforms
-        }
+        Assert.SkipUnless(IsUnix, "Unix file modes only apply on Unix.");
 
         // Arrange
         TempDir.CreateFile("readable.kql", TestFileFactory.AlreadyFormattedKql);
@@ -92,10 +115,7 @@ public class ErrorHandlingTests : KqlierTestBase
     [Trait("Category", "Unix")]
     public async Task FormatAll_MultipleUnreadableFiles_ReportsAllErrors()
     {
-        if (!IsUnix)
-        {
-            return; // Skip on non-Unix platforms
-        }
+        Assert.SkipUnless(IsUnix, "Unix file modes only apply on Unix.");
 
         // Arrange
         TempDir.CreateFile("readable.kql", TestFileFactory.UnformattedKql);
@@ -119,10 +139,7 @@ public class ErrorHandlingTests : KqlierTestBase
     [Trait("Category", "Unix")]
     public async Task FormatAll_AllFilesUnreadable_ReportsAllErrors()
     {
-        if (!IsUnix)
-        {
-            return; // Skip on non-Unix platforms
-        }
+        Assert.SkipUnless(IsUnix, "Unix file modes only apply on Unix.");
 
         // Arrange
         TempDir.CreateFile("unreadable1.kql", TestFileFactory.UnformattedKql);
@@ -137,6 +154,26 @@ public class ErrorHandlingTests : KqlierTestBase
         Assert.Equal(2, result.ExitCode);
         Assert.Contains("Formatted 0 of 2 files", result.StandardOutput);
         Assert.Contains("Errors occurred in 2 file(s):", result.StandardError);
+    }
+
+    [Fact]
+    [Trait("Category", "Unix")]
+    public async Task FormatAll_UnreadableDirectory_SkipsAndContinues()
+    {
+        Assert.SkipUnless(IsUnix, "Unix file modes only apply on Unix.");
+
+        // Arrange - one readable file plus an inaccessible subdirectory
+        TempDir.CreateFile("readable.kql", TestFileFactory.UnformattedKql);
+        TempDir.CreateFile("locked/hidden.kql", TestFileFactory.UnformattedKql);
+        TempDir.SetDirectoryMode("locked", UnixFileMode.None);
+
+        // Act
+        var result = await RunKqlierAsync("format", ".");
+
+        // Assert - the unreadable directory is skipped without failing the run
+        Assert.Equal(0, result.ExitCode);
+        Assert.Contains("Formatted 1 of 1 files", result.StandardOutput);
+        Assert.Equal(TestFileFactory.FormattedKql, TempDir.ReadFile("readable.kql"));
     }
 
     [Fact]

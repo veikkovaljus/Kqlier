@@ -7,6 +7,8 @@ public record ProcessResult(int ExitCode, string StandardOutput, string Standard
 
 public static class ProcessRunner
 {
+    private static readonly UTF8Encoding Utf8NoBom = new(encoderShouldEmitUTF8Identifier: false);
+
     public static Task<ProcessResult> RunKqlierAsync(string workingDirectory, params string[] args)
     {
         return RunKqlierAsync(workingDirectory, stdinInput: null, args);
@@ -32,9 +34,16 @@ public static class ProcessRunner
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             RedirectStandardInput = stdinInput != null,
+            StandardOutputEncoding = Utf8NoBom,
+            StandardErrorEncoding = Utf8NoBom,
             UseShellExecute = false,
             CreateNoWindow = true,
         };
+
+        if (stdinInput != null)
+        {
+            processStartInfo.StandardInputEncoding = Utf8NoBom;
+        }
 
         using var process = new Process();
         process.StartInfo = processStartInfo;
@@ -64,6 +73,7 @@ public static class ProcessRunner
         }
 
         await process.WaitForExitAsync();
+        process.WaitForExit();
 
         return new ProcessResult(process.ExitCode, stdout.ToString(), stderr.ToString());
     }

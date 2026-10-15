@@ -88,4 +88,18 @@ public class StdinTests : KqlierTestBase
         Assert.Contains("Input needs formatting", result.StandardError);
         Assert.DoesNotContain("Input needs formatting", result.StandardOutput);
     }
+
+    [Fact]
+    public async Task Stdin_Utf8Characters_RoundTripPreserved()
+    {
+        // Arrange - non-ASCII input must survive the UTF-8 stdin/stdout round-trip
+        var input = "StormEvents\n| where Description == \"Ümläut tëst\"";
+
+        // Act
+        var result = await RunKqlierWithStdinAsync(input, "format");
+
+        // Assert
+        Assert.Equal(0, result.ExitCode);
+        Assert.Contains("Ümläut tëst", result.StandardOutput);
+    }
 }

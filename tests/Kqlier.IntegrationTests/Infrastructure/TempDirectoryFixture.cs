@@ -65,42 +65,67 @@ public sealed class TempDirectoryFixture : IDisposable
         File.SetUnixFileMode(fullPath, mode);
     }
 
+    public UnixFileMode GetFileMode(string relativePath)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return default;
+        }
+
+        return File.GetUnixFileMode(Path.Combine(RootPath, relativePath));
+    }
+
+    public void SetDirectoryMode(string relativePath, UnixFileMode mode)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        File.SetUnixFileMode(Path.Combine(RootPath, relativePath), mode);
+    }
+
     public void Dispose()
     {
         try
         {
             if (Directory.Exists(RootPath))
             {
-                if (!OperatingSystem.IsWindows())
-                {
-                    foreach (
-                        var file in Directory.EnumerateFiles(
-                            RootPath,
-                            "*",
-                            SearchOption.AllDirectories
-                        )
-                    )
-                    {
-                        try
-                        {
-                            File.SetUnixFileMode(
-                                file,
-                                UnixFileMode.UserRead | UnixFileMode.UserWrite
-                            );
-                        }
-                        catch
-                        {
-                            // Ignore permission errors during cleanup
-                        }
-                    }
-                }
-
+                RestorePermissions(RootPath);
                 Directory.Delete(RootPath, recursive: true);
             }
         }
         catch
         {
             // Best effort cleanup
+        }
+    }
+
+    private static void RestorePermissions(string directory)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        foreach (var entry in Directory.EnumerateFileSystemEntries(directory))
+        {
+            try
+            {
+                File.SetUnixFileMode(
+                    entry,
+                    UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute
+                );
+            }
+            catch
+            {
+                // Ignore permission errors during cleanup
+            }
+
+            if (Directory.Exists(entry))
+            {
+                RestorePermissions(entry);
+            }
         }
     }
 }
