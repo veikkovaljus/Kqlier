@@ -83,7 +83,10 @@ public sealed class TempDirectoryFixture : IDisposable
                     {
                         try
                         {
-                            File.SetUnixFileMode(file, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+                            File.SetUnixFileMode(
+                                file,
+                                UnixFileMode.UserRead | UnixFileMode.UserWrite
+                            );
                         }
                         catch
                         {

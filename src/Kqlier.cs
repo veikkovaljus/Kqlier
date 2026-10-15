@@ -6,6 +6,8 @@ namespace Kqlier;
 
 public static class Kqlier
 {
+    private static readonly UTF8Encoding Utf8NoBom = new(encoderShouldEmitUTF8Identifier: false);
+
     public static int Run(FileInfo? fileInfo, bool check, bool stdin)
     {
         if (stdin)
@@ -23,19 +25,24 @@ public static class Kqlier
 
     private static int FormatStdin()
     {
-        var input = Console.In.ReadToEnd();
-        var formatted = FormatKql(input);
-        Console.Write(formatted);
+        using var writer = new StreamWriter(Console.OpenStandardOutput(), Utf8NoBom);
+        writer.Write(FormatKql(ReadStdin()));
         return ExitCodes.Success;
     }
 
     private static int CheckStdin()
     {
-        var input = Console.In.ReadToEnd();
+        var input = ReadStdin();
         var formatted = FormatKql(input);
         var needsFormatting = !string.Equals(input, formatted, StringComparison.Ordinal);
         Console.Error.WriteLine(needsFormatting ? "Input needs formatting" : "Input is formatted");
         return needsFormatting ? ExitCodes.NeedsFormatting : ExitCodes.Success;
+    }
+
+    private static string ReadStdin()
+    {
+        using var reader = new StreamReader(Console.OpenStandardInput(), Utf8NoBom);
+        return reader.ReadToEnd();
     }
 
     private static int Format()
@@ -115,12 +122,9 @@ public static class Kqlier
                 Console.Error.WriteLine($"  {file.FullName}: {error}");
         }
 
-        // A runtime/IO error takes precedence over files needing formatting.
-        return errors.Count > 0
-            ? ExitCodes.Error
-            : failedFiles.Count > 0
-                ? ExitCodes.NeedsFormatting
-                : ExitCodes.Success;
+        return errors.Count > 0 ? ExitCodes.Error
+            : failedFiles.Count > 0 ? ExitCodes.NeedsFormatting
+            : ExitCodes.Success;
     }
 
     private static int Check(FileInfo file)
@@ -192,8 +196,7 @@ public static class Kqlier
         }
 
         // Default: UTF-8 without BOM
-        var utf8NoBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
-        return (utf8NoBom.GetString(bytes), utf8NoBom);
+        return (Utf8NoBom.GetString(bytes), Utf8NoBom);
     }
 
     private static void WriteFile(FileInfo file, string text, Encoding encoding)
