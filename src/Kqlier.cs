@@ -156,7 +156,15 @@ public static class Kqlier
     private static IEnumerable<FileInfo> GetFiles()
     {
         var directoryInfo = new DirectoryInfo(Directory.GetCurrentDirectory());
-        return directoryInfo.EnumerateFiles("*.kql", SearchOption.AllDirectories);
+        var options = new EnumerationOptions
+        {
+            RecurseSubdirectories = true,
+            IgnoreInaccessible = true,
+        };
+
+        return directoryInfo
+            .EnumerateFiles("*", options)
+            .Where(file => file.Extension.Equals(".kql", StringComparison.OrdinalIgnoreCase));
     }
 
     private static bool NeedsFormatting(FileInfo file)

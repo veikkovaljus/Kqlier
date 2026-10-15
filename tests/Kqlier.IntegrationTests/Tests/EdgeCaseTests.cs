@@ -5,6 +5,8 @@ namespace Kqlier.IntegrationTests.Tests;
 
 public class EdgeCaseTests : KqlierTestBase
 {
+    private static bool IsUnix => OperatingSystem.IsLinux() || OperatingSystem.IsMacOS();
+
     [Fact]
     public async Task EdgeCase_EmptyFile_HandledGracefully()
     {
@@ -83,17 +85,20 @@ public class EdgeCaseTests : KqlierTestBase
     }
 
     [Fact]
-    public async Task EdgeCase_HiddenDirectory_FilesProcessed()
+    public async Task EdgeCase_HiddenDirectory_Skipped()
     {
+        // A leading dot only maps to the hidden attribute on Unix.
+        Assert.SkipUnless(IsUnix, "Leading-dot hidden semantics only apply on Unix.");
+
         // Arrange - create file in hidden directory (Unix: starts with .)
         TempDir.CreateFile(".hidden/test.kql", TestFileFactory.UnformattedKql);
 
         // Act
         var result = await RunKqlierAsync();
 
-        // Assert
+        // Assert - hidden directories are skipped and the file is left untouched
         Assert.Equal(0, result.ExitCode);
-        Assert.Equal(TestFileFactory.FormattedKql, TempDir.ReadFile(".hidden/test.kql"));
+        Assert.Equal(TestFileFactory.UnformattedKql, TempDir.ReadFile(".hidden/test.kql"));
     }
 
     [Fact]
@@ -111,9 +116,9 @@ public class EdgeCaseTests : KqlierTestBase
     }
 
     [Fact]
-    public async Task EdgeCase_KqlExtensionCaseSensitivity_LowercaseOnly()
+    public async Task EdgeCase_KqlExtensionCaseInsensitive_AllProcessed()
     {
-        // Arrange - only .kql should be processed, not .KQL or .Kql
+        // Arrange - .kql matching is case-insensitive on all platforms
         TempDir.CreateFile("lower.kql", TestFileFactory.UnformattedKql);
         TempDir.CreateFile("upper.KQL", TestFileFactory.UnformattedKql);
         TempDir.CreateFile("mixed.Kql", TestFileFactory.UnformattedKql);
@@ -123,10 +128,9 @@ public class EdgeCaseTests : KqlierTestBase
 
         // Assert
         Assert.Equal(0, result.ExitCode);
-        // Verify lower.kql is formatted
         Assert.Equal(TestFileFactory.FormattedKql, TempDir.ReadFile("lower.kql"));
-        // Upper/mixed case may or may not be processed depending on OS file system
-        // This test documents behavior - on Linux, they should not be processed
+        Assert.Equal(TestFileFactory.FormattedKql, TempDir.ReadFile("upper.KQL"));
+        Assert.Equal(TestFileFactory.FormattedKql, TempDir.ReadFile("mixed.Kql"));
     }
 
     [Fact]
