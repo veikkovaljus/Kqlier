@@ -12,7 +12,12 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+
+    runs-on: ${{ matrix.os }}
 
     steps:
     - uses: actions/checkout@v4
@@ -20,9 +25,24 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 10.0.x
+    - name: Restore tools
+      run: dotnet tool restore
+    - name: Check formatting
+      run: dotnet csharpier check .
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore
     - name: Test
       run: dotnet test --no-build --verbosity normal
+    - name: Pack and install smoke test
+      if: runner.os == 'Linux'
+      run: |
+        dotnet pack Kqlier.csproj --configuration Release --no-restore
+        version=$(ls nupkg/kqlier.*.nupkg | sed -E 's#.*/kqlier\.(.*)\.nupkg#\1#')
+        mkdir -p "$RUNNER_TEMP/kqlier-smoke"
+        cd "$RUNNER_TEMP/kqlier-smoke"
+        dotnet new tool-manifest
+        dotnet tool install kqlier --local --add-source "$GITHUB_WORKSPACE/nupkg" --version "$version"
+        installed=$(dotnet kqlier --version)
+        test "$installed" = "$version"
