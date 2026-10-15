@@ -58,8 +58,7 @@ public static class Kqlier
                 if (FormatFile(file))
                     modified++;
             }
-            catch (Exception ex)
-                when (ex is FileNotFoundException or UnauthorizedAccessException or IOException)
+            catch (Exception ex) when (IsReportableError(ex))
             {
                 errors.Add((file, ex.Message));
             }
@@ -67,23 +66,23 @@ public static class Kqlier
 
         Console.WriteLine($"Formatted {modified} of {files.Count} files");
 
-        if (errors.Count > 0)
-        {
-            Console.Error.WriteLine($"Errors occurred in {errors.Count} file(s):");
-            foreach (var (file, error) in errors)
-                Console.Error.WriteLine($"  {file.FullName}: {error}");
-        }
-
-        return errors.Count > 0 ? ExitCodes.Error : ExitCodes.Success;
+        return errors.Count > 0 ? ReportErrors(errors) : ExitCodes.Success;
     }
 
     private static int Format(FileInfo file)
     {
-        var wasModified = FormatFile(file);
-        Console.WriteLine(
-            wasModified ? $"Formatted {file.Name}" : $"{file.Name} already formatted"
-        );
-        return ExitCodes.Success;
+        try
+        {
+            var wasModified = FormatFile(file);
+            Console.WriteLine(
+                wasModified ? $"Formatted {file.Name}" : $"{file.Name} already formatted"
+            );
+            return ExitCodes.Success;
+        }
+        catch (Exception ex) when (IsReportableError(ex))
+        {
+            return ReportErrors([(file, ex.Message)]);
+        }
     }
 
     private static int Check()
@@ -99,8 +98,7 @@ public static class Kqlier
                 if (NeedsFormatting(file))
                     failedFiles.Add(file);
             }
-            catch (Exception ex)
-                when (ex is FileNotFoundException or UnauthorizedAccessException or IOException)
+            catch (Exception ex) when (IsReportableError(ex))
             {
                 errors.Add((file, ex.Message));
             }
@@ -117,23 +115,42 @@ public static class Kqlier
 
         if (errors.Count > 0)
         {
-            Console.Error.WriteLine($"Errors occurred in {errors.Count} file(s):");
-            foreach (var (file, error) in errors)
-                Console.Error.WriteLine($"  {file.FullName}: {error}");
+            return ReportErrors(errors);
         }
 
-        return errors.Count > 0 ? ExitCodes.Error
-            : failedFiles.Count > 0 ? ExitCodes.NeedsFormatting
-            : ExitCodes.Success;
+        return failedFiles.Count > 0 ? ExitCodes.NeedsFormatting : ExitCodes.Success;
     }
 
     private static int Check(FileInfo file)
     {
-        var needsFormatting = NeedsFormatting(file);
-        Console.WriteLine(
-            needsFormatting ? $"{file.Name} needs formatting" : $"{file.Name} is formatted"
-        );
-        return needsFormatting ? ExitCodes.NeedsFormatting : ExitCodes.Success;
+        try
+        {
+            var needsFormatting = NeedsFormatting(file);
+            Console.WriteLine(
+                needsFormatting ? $"{file.Name} needs formatting" : $"{file.Name} is formatted"
+            );
+            return needsFormatting ? ExitCodes.NeedsFormatting : ExitCodes.Success;
+        }
+        catch (Exception ex) when (IsReportableError(ex))
+        {
+            return ReportErrors([(file, ex.Message)]);
+        }
+    }
+
+    private static bool IsReportableError(Exception ex) =>
+        ex
+            is FileNotFoundException
+                or UnauthorizedAccessException
+                or IOException
+                or KqlDiagnosticsException;
+
+    private static int ReportErrors(List<(FileInfo file, string error)> errors)
+    {
+        Console.Error.WriteLine($"Errors occurred in {errors.Count} file(s):");
+        foreach (var (file, error) in errors)
+            Console.Error.WriteLine($"  {file.FullName}: {error}");
+
+        return ExitCodes.Error;
     }
 
     private static IEnumerable<FileInfo> GetFiles()
@@ -166,6 +183,18 @@ public static class Kqlier
     private static string FormatKql(string text)
     {
         var kustoCode = KustoCode.Parse(text);
+
+        var errors = kustoCode
+            .GetDiagnostics()
+            .Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            .Select(diagnostic => diagnostic.Message)
+            .ToList();
+
+        if (errors.Count > 0)
+        {
+            throw new KqlDiagnosticsException(string.Join("; ", errors));
+        }
+
         var kustoCodeService = new KustoCodeService(kustoCode);
         return kustoCodeService.GetFormattedText().Text;
     }
@@ -234,4 +263,6 @@ public static class Kqlier
             File.Delete(tempFile);
         }
     }
+
+    private sealed class KqlDiagnosticsException(string message) : Exception(message);
 }
