@@ -8,6 +8,7 @@
     <PackageId>kqlier</PackageId>
     <ToolCommandName>kqlier</ToolCommandName>
     <Version>0.1.3</Version>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <Authors>veikkovaljus</Authors>
     <Description>A CLI tool for formatting KQL (Kusto Query Language) files</Description>

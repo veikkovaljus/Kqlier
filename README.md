@@ -28,6 +28,9 @@ echo "StormEvents|where x==1" | kqlier --stdin
 
 # Check stdin content
 cat query.kql | kqlier --stdin --check
+
+# Show version
+kqlier --version
 ```
 
 ## Output
