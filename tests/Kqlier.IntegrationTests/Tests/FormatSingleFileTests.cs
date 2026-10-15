@@ -92,6 +92,6 @@ public class FormatSingleFileTests : KqlierTestBase
         var result = await RunKqlierAsync("--file", nonExistentPath);
 
         // Assert
-        Assert.NotEqual(0, result.ExitCode);
+        Assert.Equal(2, result.ExitCode);
     }
 }

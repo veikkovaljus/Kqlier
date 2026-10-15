@@ -33,7 +33,7 @@ internal static class Program
                 if (fileInfo != null && stdinInfo)
                 {
                     Console.Error.WriteLine("Cannot use --file and --stdin together");
-                    return 1;
+                    return ExitCodes.Error;
                 }
 
                 return Kqlier.Run(fileInfo, checkInfo, stdinInfo);
@@ -41,10 +41,12 @@ internal static class Program
             catch (Exception ex)
             {
                 Console.Error.WriteLine($"Error: {ex.Message}");
-                return 1;
+                return ExitCodes.Error;
             }
         });
         var parseResult = rootCommand.Parse(args);
-        return parseResult.Invoke();
+        var exitCode = parseResult.Invoke();
+
+        return parseResult.Errors.Count > 0 ? ExitCodes.Error : exitCode;
     }
 }

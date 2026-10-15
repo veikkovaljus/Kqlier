@@ -20,7 +20,7 @@ public class ErrorHandlingTests : KqlierTestBase
         var result = await RunKqlierAsync("--file", nonExistentPath);
 
         // Assert
-        Assert.Equal(1, result.ExitCode);
+        Assert.Equal(2, result.ExitCode);
         Assert.Contains("does not exist", result.StandardError);
     }
 
@@ -34,7 +34,7 @@ public class ErrorHandlingTests : KqlierTestBase
         var result = await RunKqlierAsync("--check", "--file", nonExistentPath);
 
         // Assert
-        Assert.Equal(1, result.ExitCode);
+        Assert.Equal(2, result.ExitCode);
         Assert.Contains("does not exist", result.StandardError);
     }
 
@@ -56,7 +56,7 @@ public class ErrorHandlingTests : KqlierTestBase
         var result = await RunKqlierAsync();
 
         // Assert
-        Assert.Equal(1, result.ExitCode);
+        Assert.Equal(2, result.ExitCode);
         Assert.Contains("Formatted 1 of 2 files", result.StandardOutput);
         Assert.Contains("Errors occurred in 1 file(s):", result.StandardError);
         Assert.Contains("unreadable.kql", result.StandardError);
@@ -82,7 +82,7 @@ public class ErrorHandlingTests : KqlierTestBase
         var result = await RunKqlierAsync("--check");
 
         // Assert
-        Assert.Equal(1, result.ExitCode);
+        Assert.Equal(2, result.ExitCode);
         Assert.Contains("Checked 2 files", result.StandardOutput);
         Assert.Contains("Errors occurred in 1 file(s):", result.StandardError);
         Assert.Contains("unreadable.kql", result.StandardError);
@@ -108,7 +108,7 @@ public class ErrorHandlingTests : KqlierTestBase
         var result = await RunKqlierAsync();
 
         // Assert
-        Assert.Equal(1, result.ExitCode);
+        Assert.Equal(2, result.ExitCode);
         Assert.Contains("Formatted 1 of 3 files", result.StandardOutput);
         Assert.Contains("Errors occurred in 2 file(s):", result.StandardError);
         Assert.Contains("unreadable1.kql", result.StandardError);
@@ -134,7 +134,7 @@ public class ErrorHandlingTests : KqlierTestBase
         var result = await RunKqlierAsync();
 
         // Assert
-        Assert.Equal(1, result.ExitCode);
+        Assert.Equal(2, result.ExitCode);
         Assert.Contains("Formatted 0 of 2 files", result.StandardOutput);
         Assert.Contains("Errors occurred in 2 file(s):", result.StandardError);
     }
@@ -149,7 +149,7 @@ public class ErrorHandlingTests : KqlierTestBase
         var result = await RunKqlierAsync("--file", filePath, "--stdin");
 
         // Assert
-        Assert.Equal(1, result.ExitCode);
+        Assert.Equal(2, result.ExitCode);
         Assert.Contains("Cannot use --file and --stdin together", result.StandardError);
     }
 

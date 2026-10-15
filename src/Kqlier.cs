@@ -26,7 +26,7 @@ public static class Kqlier
         var input = Console.In.ReadToEnd();
         var formatted = FormatKql(input);
         Console.Write(formatted);
-        return 0;
+        return ExitCodes.Success;
     }
 
     private static int CheckStdin()
@@ -35,7 +35,7 @@ public static class Kqlier
         var formatted = FormatKql(input);
         var needsFormatting = !string.Equals(input, formatted, StringComparison.Ordinal);
         Console.Error.WriteLine(needsFormatting ? "Input needs formatting" : "Input is formatted");
-        return needsFormatting ? 1 : 0;
+        return needsFormatting ? ExitCodes.NeedsFormatting : ExitCodes.Success;
     }
 
     private static int Format()
@@ -67,7 +67,7 @@ public static class Kqlier
                 Console.Error.WriteLine($"  {file.FullName}: {error}");
         }
 
-        return errors.Count > 0 ? 1 : 0;
+        return errors.Count > 0 ? ExitCodes.Error : ExitCodes.Success;
     }
 
     private static int Format(FileInfo file)
@@ -76,7 +76,7 @@ public static class Kqlier
         Console.WriteLine(
             wasModified ? $"Formatted {file.Name}" : $"{file.Name} already formatted"
         );
-        return 0;
+        return ExitCodes.Success;
     }
 
     private static int Check()
@@ -89,7 +89,7 @@ public static class Kqlier
         {
             try
             {
-                if (CheckFile(file) != 0)
+                if (NeedsFormatting(file))
                     failedFiles.Add(file);
             }
             catch (Exception ex)
@@ -115,16 +115,21 @@ public static class Kqlier
                 Console.Error.WriteLine($"  {file.FullName}: {error}");
         }
 
-        return (failedFiles.Count > 0 || errors.Count > 0) ? 1 : 0;
+        // A runtime/IO error takes precedence over files needing formatting.
+        return errors.Count > 0
+            ? ExitCodes.Error
+            : failedFiles.Count > 0
+                ? ExitCodes.NeedsFormatting
+                : ExitCodes.Success;
     }
 
     private static int Check(FileInfo file)
     {
-        var needsFormatting = CheckFile(file) != 0;
+        var needsFormatting = NeedsFormatting(file);
         Console.WriteLine(
             needsFormatting ? $"{file.Name} needs formatting" : $"{file.Name} is formatted"
         );
-        return needsFormatting ? 1 : 0;
+        return needsFormatting ? ExitCodes.NeedsFormatting : ExitCodes.Success;
     }
 
     private static IEnumerable<FileInfo> GetFiles()
@@ -133,12 +138,12 @@ public static class Kqlier
         return directoryInfo.EnumerateFiles("*.kql", SearchOption.AllDirectories);
     }
 
-    private static int CheckFile(FileInfo file)
+    private static bool NeedsFormatting(FileInfo file)
     {
         var (originalText, _) = ReadFile(file);
         var formattedText = FormatKql(originalText);
 
-        return !string.Equals(originalText, formattedText, StringComparison.Ordinal) ? 1 : 0;
+        return !string.Equals(originalText, formattedText, StringComparison.Ordinal);
     }
 
     private static bool FormatFile(FileInfo file)

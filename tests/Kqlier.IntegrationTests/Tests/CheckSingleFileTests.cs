@@ -85,6 +85,6 @@ public class CheckSingleFileTests : KqlierTestBase
         var result = await RunKqlierAsync("--check", "--file", nonExistentPath);
 
         // Assert
-        Assert.NotEqual(0, result.ExitCode);
+        Assert.Equal(2, result.ExitCode);
     }
 }

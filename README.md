@@ -49,6 +49,7 @@ Files not formatted:
 
 - `0` - Success (all files formatted or already formatted)
 - `1` - Check mode: one or more files need formatting
+- `2` - Runtime, I/O, or usage error (e.g. unreadable file, invalid options)
 
 ## License
 
