@@ -6,47 +6,58 @@ internal static class Program
 {
     private static int Main(string[] args)
     {
-        Option<FileInfo> fileOption = new("--file") { Description = "The file to format" };
-        fileOption.AcceptExistingOnly();
-        Option<bool> checkOption = new("--check")
+        var rootCommand = new RootCommand("Tool for formatting .kql files");
+
+        var formatCommand = new Command(
+            "format",
+            "Format a .kql file or directory (stdin when no path is given)"
+        );
+        var formatPath = new Argument<string>("path")
         {
-            Description = "Checks if all files are formatted",
+            Description = "A .kql file or directory. Reads stdin when omitted.",
+            Arity = ArgumentArity.ZeroOrOne,
         };
-        Option<bool> stdinOption = new("--stdin")
+        formatCommand.Add(formatPath);
+        formatCommand.SetAction(parseResult =>
         {
-            Description = "Read from stdin and write to stdout",
-        };
-
-        RootCommand rootCommand = new("Tool for formatting .kql files");
-        rootCommand.Options.Add(fileOption);
-        rootCommand.Options.Add(checkOption);
-        rootCommand.Options.Add(stdinOption);
-
-        rootCommand.SetAction(parseResult =>
-        {
-            try
-            {
-                var fileInfo = parseResult.GetValue(fileOption);
-                var checkInfo = parseResult.GetValue(checkOption);
-                var stdinInfo = parseResult.GetValue(stdinOption);
-
-                if (fileInfo != null && stdinInfo)
-                {
-                    Console.Error.WriteLine("Cannot use --file and --stdin together");
-                    return ExitCodes.Error;
-                }
-
-                return Kqlier.Run(fileInfo, checkInfo, stdinInfo);
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Error: {ex.Message}");
-                return ExitCodes.Error;
-            }
+            var path = parseResult.GetValue(formatPath);
+            return Invoke(() => Kqlier.Format(path));
         });
+
+        var checkCommand = new Command(
+            "check",
+            "Check if .kql files are formatted (exit 1 if not)"
+        );
+        var checkPath = new Argument<string>("path")
+        {
+            Description = "A .kql file or directory. Checks stdin when omitted.",
+            Arity = ArgumentArity.ZeroOrOne,
+        };
+        checkCommand.Add(checkPath);
+        checkCommand.SetAction(parseResult =>
+        {
+            var path = parseResult.GetValue(checkPath);
+            return Invoke(() => Kqlier.Check(path));
+        });
+
+        rootCommand.Add(formatCommand);
+        rootCommand.Add(checkCommand);
+
         var parseResult = rootCommand.Parse(args);
         var exitCode = parseResult.Invoke();
-
         return parseResult.Errors.Count > 0 ? ExitCodes.Error : exitCode;
+    }
+
+    private static int Invoke(Func<int> action)
+    {
+        try
+        {
+            return action();
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error: {ex.Message}");
+            return ExitCodes.Error;
+        }
     }
 }

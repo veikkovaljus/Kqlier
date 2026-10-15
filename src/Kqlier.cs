@@ -8,19 +8,44 @@ public static class Kqlier
 {
     private static readonly UTF8Encoding Utf8NoBom = new(encoderShouldEmitUTF8Identifier: false);
 
-    public static int Run(FileInfo? fileInfo, bool check, bool stdin)
+    public static int Format(string? path)
     {
-        if (stdin)
+        if (path is null)
         {
-            return check ? CheckStdin() : FormatStdin();
+            return FormatStdin();
         }
 
-        if (check)
+        if (File.Exists(path))
         {
-            return fileInfo != null ? Check(fileInfo) : Check();
+            return Format(new FileInfo(path));
         }
 
-        return fileInfo != null ? Format(fileInfo) : Format();
+        if (Directory.Exists(path))
+        {
+            return Format(new DirectoryInfo(path));
+        }
+
+        return ReportPathError(path);
+    }
+
+    public static int Check(string? path)
+    {
+        if (path is null)
+        {
+            return CheckStdin();
+        }
+
+        if (File.Exists(path))
+        {
+            return Check(new FileInfo(path));
+        }
+
+        if (Directory.Exists(path))
+        {
+            return Check(new DirectoryInfo(path));
+        }
+
+        return ReportPathError(path);
     }
 
     private static int FormatStdin()
@@ -45,9 +70,9 @@ public static class Kqlier
         return reader.ReadToEnd();
     }
 
-    private static int Format()
+    private static int Format(DirectoryInfo directory)
     {
-        var files = GetFiles().ToList();
+        var files = GetFiles(directory).ToList();
         var modified = 0;
         var errors = new List<(FileInfo file, string error)>();
 
@@ -85,9 +110,9 @@ public static class Kqlier
         }
     }
 
-    private static int Check()
+    private static int Check(DirectoryInfo directory)
     {
-        var files = GetFiles().ToList();
+        var files = GetFiles(directory).ToList();
         var failedFiles = new List<FileInfo>();
         var errors = new List<(FileInfo file, string error)>();
 
@@ -153,16 +178,21 @@ public static class Kqlier
         return ExitCodes.Error;
     }
 
-    private static IEnumerable<FileInfo> GetFiles()
+    private static int ReportPathError(string path)
     {
-        var directoryInfo = new DirectoryInfo(Directory.GetCurrentDirectory());
+        Console.Error.WriteLine($"Error: '{path}' is not an existing file or directory");
+        return ExitCodes.Error;
+    }
+
+    private static IEnumerable<FileInfo> GetFiles(DirectoryInfo directory)
+    {
         var options = new EnumerationOptions
         {
             RecurseSubdirectories = true,
             IgnoreInaccessible = true,
         };
 
-        return directoryInfo
+        return directory
             .EnumerateFiles("*", options)
             .Where(file => file.Extension.Equals(".kql", StringComparison.OrdinalIgnoreCase));
     }

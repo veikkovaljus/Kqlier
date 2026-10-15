@@ -13,7 +13,7 @@ public class CheckAllFilesTests : KqlierTestBase
         TempDir.CreateFile("file2.kql", TestFileFactory.AlreadyFormattedKql);
 
         // Act
-        var result = await RunKqlierAsync("--check");
+        var result = await RunKqlierAsync("check", ".");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -27,7 +27,7 @@ public class CheckAllFilesTests : KqlierTestBase
         TempDir.CreateFile("unformatted.kql", TestFileFactory.UnformattedKql);
 
         // Act
-        var result = await RunKqlierAsync("--check");
+        var result = await RunKqlierAsync("check", ".");
 
         // Assert
         Assert.Equal(1, result.ExitCode);
@@ -42,7 +42,7 @@ public class CheckAllFilesTests : KqlierTestBase
         TempDir.CreateFile("file3.kql", TestFileFactory.UnformattedKql);
 
         // Act
-        var result = await RunKqlierAsync("--check");
+        var result = await RunKqlierAsync("check", ".");
 
         // Assert
         Assert.Equal(1, result.ExitCode);
@@ -54,7 +54,7 @@ public class CheckAllFilesTests : KqlierTestBase
         // Arrange - empty directory
 
         // Act
-        var result = await RunKqlierAsync("--check");
+        var result = await RunKqlierAsync("check", ".");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -69,7 +69,7 @@ public class CheckAllFilesTests : KqlierTestBase
         var originalBytes = TempDir.ReadFileBytes("test.kql");
 
         // Act
-        var result = await RunKqlierAsync("--check");
+        var result = await RunKqlierAsync("check", ".");
 
         // Assert
         Assert.Equal(1, result.ExitCode);
@@ -86,7 +86,7 @@ public class CheckAllFilesTests : KqlierTestBase
         TempDir.CreateFile("sub1/sub2/file2.kql", TestFileFactory.AlreadyFormattedKql);
 
         // Act
-        var result = await RunKqlierAsync("--check");
+        var result = await RunKqlierAsync("check", ".");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -101,9 +101,24 @@ public class CheckAllFilesTests : KqlierTestBase
         TempDir.CreateFile("sub1/sub2/unformatted.kql", TestFileFactory.UnformattedKql);
 
         // Act
-        var result = await RunKqlierAsync("--check");
+        var result = await RunKqlierAsync("check", ".");
 
         // Assert
         Assert.Equal(1, result.ExitCode);
+    }
+
+    [Fact]
+    public async Task CheckAllFiles_TargetDirectory_ChecksOnlyThatDirectory()
+    {
+        // Arrange - unformatted file in target dir, formatted file elsewhere
+        TempDir.CreateFile("target/file.kql", TestFileFactory.UnformattedKql);
+        TempDir.CreateFile("other/file.kql", TestFileFactory.UnformattedKql);
+
+        // Act
+        var result = await RunKqlierAsync("check", "target");
+
+        // Assert - only the target dir is checked, which has one unformatted file
+        Assert.Equal(1, result.ExitCode);
+        Assert.Contains("Checked 1 files, 1 need formatting", result.StandardOutput);
     }
 }

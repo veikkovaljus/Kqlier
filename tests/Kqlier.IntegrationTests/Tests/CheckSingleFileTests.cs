@@ -12,7 +12,7 @@ public class CheckSingleFileTests : KqlierTestBase
         var filePath = TempDir.CreateFile("test.kql", TestFileFactory.AlreadyFormattedKql);
 
         // Act
-        var result = await RunKqlierAsync("--check", "--file", filePath);
+        var result = await RunKqlierAsync("check", filePath);
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -26,7 +26,7 @@ public class CheckSingleFileTests : KqlierTestBase
         var filePath = TempDir.CreateFile("test.kql", TestFileFactory.UnformattedKql);
 
         // Act
-        var result = await RunKqlierAsync("--check", "--file", filePath);
+        var result = await RunKqlierAsync("check", filePath);
 
         // Assert
         Assert.Equal(1, result.ExitCode);
@@ -40,7 +40,7 @@ public class CheckSingleFileTests : KqlierTestBase
         var originalBytes = TempDir.ReadFileBytes("test.kql");
 
         // Act
-        var result = await RunKqlierAsync("--check", "--file", filePath);
+        var result = await RunKqlierAsync("check", filePath);
 
         // Assert
         Assert.Equal(1, result.ExitCode);
@@ -56,7 +56,7 @@ public class CheckSingleFileTests : KqlierTestBase
         TempDir.CreateFile("other.kql", TestFileFactory.UnformattedKql);
 
         // Act - check only the formatted target
-        var result = await RunKqlierAsync("--check", "--file", targetPath);
+        var result = await RunKqlierAsync("check", targetPath);
 
         // Assert - should pass because we only check the target
         Assert.Equal(0, result.ExitCode);
@@ -69,7 +69,7 @@ public class CheckSingleFileTests : KqlierTestBase
         TempDir.CreateFile("test.kql", TestFileFactory.AlreadyFormattedKql);
 
         // Act
-        var result = await RunKqlierAsync("--check", "--file", "test.kql");
+        var result = await RunKqlierAsync("check", "test.kql");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -82,7 +82,7 @@ public class CheckSingleFileTests : KqlierTestBase
         var nonExistentPath = Path.Combine(TempDir.RootPath, "nonexistent.kql");
 
         // Act
-        var result = await RunKqlierAsync("--check", "--file", nonExistentPath);
+        var result = await RunKqlierAsync("check", nonExistentPath);
 
         // Assert
         Assert.Equal(2, result.ExitCode);

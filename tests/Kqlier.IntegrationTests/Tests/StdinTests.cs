@@ -12,7 +12,7 @@ public class StdinTests : KqlierTestBase
         var input = "StormEvents\n| where State==\"TEXAS\"\n| project StartTime,EndTime";
 
         // Act
-        var result = await RunKqlierWithStdinAsync(input, "--stdin");
+        var result = await RunKqlierWithStdinAsync(input, "format");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -27,7 +27,7 @@ public class StdinTests : KqlierTestBase
         var input = "StormEvents\n| where State == \"TEXAS\"";
 
         // Act
-        var result = await RunKqlierWithStdinAsync(input, "--stdin");
+        var result = await RunKqlierWithStdinAsync(input, "format");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -41,7 +41,7 @@ public class StdinTests : KqlierTestBase
         var input = "";
 
         // Act
-        var result = await RunKqlierWithStdinAsync(input, "--stdin");
+        var result = await RunKqlierWithStdinAsync(input, "format");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -54,7 +54,7 @@ public class StdinTests : KqlierTestBase
         var input = "StormEvents\n| where State==\"TEXAS\"";
 
         // Act
-        var result = await RunKqlierWithStdinAsync(input, "--stdin", "--check");
+        var result = await RunKqlierWithStdinAsync(input, "check");
 
         // Assert
         Assert.Equal(1, result.ExitCode);
@@ -68,7 +68,7 @@ public class StdinTests : KqlierTestBase
         var input = "StormEvents\n| where State == \"TEXAS\"";
 
         // Act
-        var result = await RunKqlierWithStdinAsync(input, "--stdin", "--check");
+        var result = await RunKqlierWithStdinAsync(input, "check");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -82,7 +82,7 @@ public class StdinTests : KqlierTestBase
         var input = "StormEvents\n| where State==\"TEXAS\"";
 
         // Act
-        var result = await RunKqlierWithStdinAsync(input, "--stdin", "--check");
+        var result = await RunKqlierWithStdinAsync(input, "check");
 
         // Assert - status message should be in stderr, not stdout
         Assert.Contains("Input needs formatting", result.StandardError);

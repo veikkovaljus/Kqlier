@@ -14,7 +14,7 @@ public class LineEndingTests : KqlierTestBase
         Assert.False(ByteHelpers.ContainsCrlf(bytes));
 
         // Act
-        var result = await RunKqlierAsync();
+        var result = await RunKqlierAsync("format", ".");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -31,7 +31,7 @@ public class LineEndingTests : KqlierTestBase
         Assert.True(ByteHelpers.ContainsCrlf(bytes));
 
         // Act
-        var result = await RunKqlierAsync();
+        var result = await RunKqlierAsync("format", ".");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -47,7 +47,7 @@ public class LineEndingTests : KqlierTestBase
         TempDir.CreateFileBytes("test.kql", bytes);
 
         // Act
-        var result = await RunKqlierAsync("--check");
+        var result = await RunKqlierAsync("check", ".");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -61,7 +61,7 @@ public class LineEndingTests : KqlierTestBase
         TempDir.CreateFileBytes("test.kql", bytes);
 
         // Act
-        var result = await RunKqlierAsync("--check");
+        var result = await RunKqlierAsync("check", ".");
 
         // Assert - formatted content should pass check regardless of line endings
         Assert.Equal(0, result.ExitCode);
@@ -76,7 +76,7 @@ public class LineEndingTests : KqlierTestBase
         TempDir.CreateFileBytes("test.kql", bytes);
 
         // Act
-        var result = await RunKqlierAsync();
+        var result = await RunKqlierAsync("format", ".");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -92,7 +92,7 @@ public class LineEndingTests : KqlierTestBase
         var hadTrailingNewline = bytes[^1] == 0x0A;
 
         // Act
-        var result = await RunKqlierAsync();
+        var result = await RunKqlierAsync("format", ".");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -109,7 +109,7 @@ public class LineEndingTests : KqlierTestBase
         TempDir.CreateFile("test.kql", content);
 
         // Act
-        var result = await RunKqlierAsync();
+        var result = await RunKqlierAsync("format", ".");
 
         // Assert
         Assert.Equal(0, result.ExitCode);

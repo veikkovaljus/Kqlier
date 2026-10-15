@@ -17,11 +17,11 @@ public class ErrorHandlingTests : KqlierTestBase
         var nonExistentPath = Path.Combine(TempDir.RootPath, "nonexistent.kql");
 
         // Act
-        var result = await RunKqlierAsync("--file", nonExistentPath);
+        var result = await RunKqlierAsync("format", nonExistentPath);
 
         // Assert
         Assert.Equal(2, result.ExitCode);
-        Assert.Contains("does not exist", result.StandardError);
+        Assert.Contains("is not an existing file or directory", result.StandardError);
     }
 
     [Fact]
@@ -31,11 +31,11 @@ public class ErrorHandlingTests : KqlierTestBase
         var nonExistentPath = Path.Combine(TempDir.RootPath, "nonexistent.kql");
 
         // Act
-        var result = await RunKqlierAsync("--check", "--file", nonExistentPath);
+        var result = await RunKqlierAsync("check", nonExistentPath);
 
         // Assert
         Assert.Equal(2, result.ExitCode);
-        Assert.Contains("does not exist", result.StandardError);
+        Assert.Contains("is not an existing file or directory", result.StandardError);
     }
 
     [Fact]
@@ -53,7 +53,7 @@ public class ErrorHandlingTests : KqlierTestBase
         TempDir.SetFileMode("unreadable.kql", UnixFileMode.None);
 
         // Act
-        var result = await RunKqlierAsync();
+        var result = await RunKqlierAsync("format", ".");
 
         // Assert
         Assert.Equal(2, result.ExitCode);
@@ -79,7 +79,7 @@ public class ErrorHandlingTests : KqlierTestBase
         TempDir.SetFileMode("unreadable.kql", UnixFileMode.None);
 
         // Act
-        var result = await RunKqlierAsync("--check");
+        var result = await RunKqlierAsync("check", ".");
 
         // Assert
         Assert.Equal(2, result.ExitCode);
@@ -105,7 +105,7 @@ public class ErrorHandlingTests : KqlierTestBase
         TempDir.SetFileMode("unreadable2.kql", UnixFileMode.None);
 
         // Act
-        var result = await RunKqlierAsync();
+        var result = await RunKqlierAsync("format", ".");
 
         // Assert
         Assert.Equal(2, result.ExitCode);
@@ -131,26 +131,12 @@ public class ErrorHandlingTests : KqlierTestBase
         TempDir.SetFileMode("unreadable2.kql", UnixFileMode.None);
 
         // Act
-        var result = await RunKqlierAsync();
+        var result = await RunKqlierAsync("format", ".");
 
         // Assert
         Assert.Equal(2, result.ExitCode);
         Assert.Contains("Formatted 0 of 2 files", result.StandardOutput);
         Assert.Contains("Errors occurred in 2 file(s):", result.StandardError);
-    }
-
-    [Fact]
-    public async Task ConflictingOptions_FileAndStdin_ReturnsError()
-    {
-        // Arrange
-        var filePath = TempDir.CreateFile("test.kql", TestFileFactory.UnformattedKql);
-
-        // Act
-        var result = await RunKqlierAsync("--file", filePath, "--stdin");
-
-        // Assert
-        Assert.Equal(2, result.ExitCode);
-        Assert.Contains("Cannot use --file and --stdin together", result.StandardError);
     }
 
     [Fact]
@@ -161,7 +147,7 @@ public class ErrorHandlingTests : KqlierTestBase
         TempDir.CreateFile("file2.kql", TestFileFactory.UnformattedKql);
 
         // Act
-        var result = await RunKqlierAsync();
+        var result = await RunKqlierAsync("format", ".");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -177,7 +163,7 @@ public class ErrorHandlingTests : KqlierTestBase
         TempDir.CreateFile("file2.kql", TestFileFactory.AlreadyFormattedKql);
 
         // Act
-        var result = await RunKqlierAsync("--check");
+        var result = await RunKqlierAsync("check", ".");
 
         // Assert
         Assert.Equal(0, result.ExitCode);

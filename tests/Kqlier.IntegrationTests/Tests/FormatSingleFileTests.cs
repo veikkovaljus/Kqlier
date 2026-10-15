@@ -12,7 +12,7 @@ public class FormatSingleFileTests : KqlierTestBase
         var filePath = TempDir.CreateFile("test.kql", TestFileFactory.UnformattedKql);
 
         // Act
-        var result = await RunKqlierAsync("--file", filePath);
+        var result = await RunKqlierAsync("format", filePath);
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -27,7 +27,7 @@ public class FormatSingleFileTests : KqlierTestBase
         TempDir.CreateFile("test.kql", TestFileFactory.UnformattedKql);
 
         // Act
-        var result = await RunKqlierAsync("--file", "test.kql");
+        var result = await RunKqlierAsync("format", "test.kql");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -41,7 +41,7 @@ public class FormatSingleFileTests : KqlierTestBase
         var filePath = TempDir.CreateFile("subdir/test.kql", TestFileFactory.UnformattedKql);
 
         // Act
-        var result = await RunKqlierAsync("--file", filePath);
+        var result = await RunKqlierAsync("format", filePath);
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -56,7 +56,7 @@ public class FormatSingleFileTests : KqlierTestBase
         TempDir.CreateFile("other.kql", TestFileFactory.UnformattedKql);
 
         // Act
-        var result = await RunKqlierAsync("--file", targetPath);
+        var result = await RunKqlierAsync("format", targetPath);
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -74,7 +74,7 @@ public class FormatSingleFileTests : KqlierTestBase
         await Task.Delay(100, TestContext.Current.CancellationToken);
 
         // Act
-        var result = await RunKqlierAsync("--file", filePath);
+        var result = await RunKqlierAsync("format", filePath);
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -89,7 +89,7 @@ public class FormatSingleFileTests : KqlierTestBase
         var nonExistentPath = Path.Combine(TempDir.RootPath, "nonexistent.kql");
 
         // Act
-        var result = await RunKqlierAsync("--file", nonExistentPath);
+        var result = await RunKqlierAsync("format", nonExistentPath);
 
         // Assert
         Assert.Equal(2, result.ExitCode);

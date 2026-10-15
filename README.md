@@ -12,22 +12,25 @@ dotnet tool install -g kqlier
 
 ```bash
 # Format all .kql files recursively in the current directory
-kqlier
+kqlier format .
 
 # Format a single file
-kqlier --file query.kql
+kqlier format query.kql
+
+# Format all .kql files in a directory
+kqlier format ./queries
 
 # Check if files are formatted (exit 1 if any need formatting)
-kqlier --check
+kqlier check .
 
 # Check a single file
-kqlier --check --file query.kql
+kqlier check query.kql
 
 # Format from stdin, output to stdout
-echo "StormEvents|where x==1" | kqlier --stdin
+echo "StormEvents|where x==1" | kqlier format
 
 # Check stdin content
-cat query.kql | kqlier --stdin --check
+cat query.kql | kqlier check
 
 # Show version
 kqlier --version

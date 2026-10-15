@@ -12,7 +12,7 @@ public class FormatAllFilesTests : KqlierTestBase
         TempDir.CreateFile("test.kql", TestFileFactory.UnformattedKql);
 
         // Act
-        var result = await RunKqlierAsync();
+        var result = await RunKqlierAsync("format", ".");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -29,7 +29,7 @@ public class FormatAllFilesTests : KqlierTestBase
         TempDir.CreateFile("file3.kql", TestFileFactory.UnformattedKql);
 
         // Act
-        var result = await RunKqlierAsync();
+        var result = await RunKqlierAsync("format", ".");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -48,7 +48,7 @@ public class FormatAllFilesTests : KqlierTestBase
         TempDir.CreateFile("sub1/sub2/file2.kql", TestFileFactory.UnformattedKql);
 
         // Act
-        var result = await RunKqlierAsync();
+        var result = await RunKqlierAsync("format", ".");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -64,7 +64,7 @@ public class FormatAllFilesTests : KqlierTestBase
         // Arrange - empty directory (already done by fixture)
 
         // Act
-        var result = await RunKqlierAsync();
+        var result = await RunKqlierAsync("format", ".");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -80,7 +80,7 @@ public class FormatAllFilesTests : KqlierTestBase
         TempDir.CreateFile("test.kusto", TestFileFactory.UnformattedKql);
 
         // Act
-        var result = await RunKqlierAsync();
+        var result = await RunKqlierAsync("format", ".");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -101,7 +101,7 @@ public class FormatAllFilesTests : KqlierTestBase
         await Task.Delay(100, TestContext.Current.CancellationToken);
 
         // Act
-        var result = await RunKqlierAsync();
+        var result = await RunKqlierAsync("format", ".");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -120,11 +120,27 @@ public class FormatAllFilesTests : KqlierTestBase
         await Task.Delay(100, TestContext.Current.CancellationToken);
 
         // Act
-        var result = await RunKqlierAsync();
+        var result = await RunKqlierAsync("format", ".");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
         Assert.Equal(formattedTime, TempDir.GetLastWriteTime("formatted.kql"));
         Assert.Equal(TestFileFactory.FormattedKql, TempDir.ReadFile("unformatted.kql"));
+    }
+
+    [Fact]
+    public async Task FormatAllFiles_TargetDirectory_FormatsOnlyThatDirectory()
+    {
+        // Arrange
+        TempDir.CreateFile("target/file.kql", TestFileFactory.UnformattedKql);
+        TempDir.CreateFile("other/file.kql", TestFileFactory.UnformattedKql);
+
+        // Act
+        var result = await RunKqlierAsync("format", "target");
+
+        // Assert
+        Assert.Equal(0, result.ExitCode);
+        Assert.Equal(TestFileFactory.FormattedKql, TempDir.ReadFile("target/file.kql"));
+        Assert.Equal(TestFileFactory.UnformattedKql, TempDir.ReadFile("other/file.kql"));
     }
 }

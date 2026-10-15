@@ -14,7 +14,7 @@ public class EdgeCaseTests : KqlierTestBase
         TempDir.CreateFile("test.kql", TestFileFactory.EmptyKql);
 
         // Act
-        var result = await RunKqlierAsync();
+        var result = await RunKqlierAsync("format", ".");
 
         // Assert - should not crash
         Assert.Equal(0, result.ExitCode);
@@ -27,7 +27,7 @@ public class EdgeCaseTests : KqlierTestBase
         TempDir.CreateFile("test.kql", TestFileFactory.WhitespaceOnlyKql);
 
         // Act
-        var result = await RunKqlierAsync();
+        var result = await RunKqlierAsync("format", ".");
 
         // Assert - should not crash
         Assert.Equal(0, result.ExitCode);
@@ -40,7 +40,7 @@ public class EdgeCaseTests : KqlierTestBase
         TempDir.CreateFile("a/b/c/d/e/deep.kql", TestFileFactory.UnformattedKql);
 
         // Act
-        var result = await RunKqlierAsync();
+        var result = await RunKqlierAsync("format", ".");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -54,7 +54,7 @@ public class EdgeCaseTests : KqlierTestBase
         TempDir.CreateFile("path with spaces/test.kql", TestFileFactory.UnformattedKql);
 
         // Act
-        var result = await RunKqlierAsync();
+        var result = await RunKqlierAsync("format", ".");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -71,7 +71,7 @@ public class EdgeCaseTests : KqlierTestBase
         }
 
         // Act
-        var result = await RunKqlierAsync();
+        var result = await RunKqlierAsync("format", ".");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -94,7 +94,7 @@ public class EdgeCaseTests : KqlierTestBase
         TempDir.CreateFile(".hidden/test.kql", TestFileFactory.UnformattedKql);
 
         // Act
-        var result = await RunKqlierAsync();
+        var result = await RunKqlierAsync("format", ".");
 
         // Assert - hidden directories are skipped and the file is left untouched
         Assert.Equal(0, result.ExitCode);
@@ -108,7 +108,7 @@ public class EdgeCaseTests : KqlierTestBase
         TempDir.CreateFile("test.query.kql", TestFileFactory.UnformattedKql);
 
         // Act
-        var result = await RunKqlierAsync();
+        var result = await RunKqlierAsync("format", ".");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -124,7 +124,7 @@ public class EdgeCaseTests : KqlierTestBase
         TempDir.CreateFile("mixed.Kql", TestFileFactory.UnformattedKql);
 
         // Act
-        var result = await RunKqlierAsync();
+        var result = await RunKqlierAsync("format", ".");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -141,7 +141,7 @@ public class EdgeCaseTests : KqlierTestBase
         TempDir.CreateFile(longName, TestFileFactory.UnformattedKql);
 
         // Act
-        var result = await RunKqlierAsync();
+        var result = await RunKqlierAsync("format", ".");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -155,7 +155,7 @@ public class EdgeCaseTests : KqlierTestBase
         TempDir.CreateFile("test.kql", TestFileFactory.EmptyKql);
 
         // Act
-        var result = await RunKqlierAsync("--check");
+        var result = await RunKqlierAsync("check", ".");
 
         // Assert - empty file should be considered "formatted"
         Assert.Equal(0, result.ExitCode);

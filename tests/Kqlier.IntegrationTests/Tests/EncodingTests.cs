@@ -14,7 +14,7 @@ public class EncodingTests : KqlierTestBase
         Assert.False(ByteHelpers.HasUtf8Bom(bytes));
 
         // Act
-        var result = await RunKqlierAsync();
+        var result = await RunKqlierAsync("format", ".");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -31,7 +31,7 @@ public class EncodingTests : KqlierTestBase
         Assert.True(ByteHelpers.HasUtf8Bom(bytes));
 
         // Act
-        var result = await RunKqlierAsync();
+        var result = await RunKqlierAsync("format", ".");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -48,7 +48,7 @@ public class EncodingTests : KqlierTestBase
         Assert.True(ByteHelpers.HasUtf16LeBom(bytes));
 
         // Act
-        var result = await RunKqlierAsync();
+        var result = await RunKqlierAsync("format", ".");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -65,7 +65,7 @@ public class EncodingTests : KqlierTestBase
         Assert.True(ByteHelpers.HasUtf16BeBom(bytes));
 
         // Act
-        var result = await RunKqlierAsync();
+        var result = await RunKqlierAsync("format", ".");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
@@ -81,7 +81,7 @@ public class EncodingTests : KqlierTestBase
         TempDir.CreateFileBytes("test.kql", bytes);
 
         // Act
-        var result = await RunKqlierAsync("--check");
+        var result = await RunKqlierAsync("check", ".");
 
         // Assert - should pass as file is already formatted
         Assert.Equal(0, result.ExitCode);
@@ -95,7 +95,7 @@ public class EncodingTests : KqlierTestBase
         TempDir.CreateFile("test.kql", kqlWithUnicode);
 
         // Act
-        var result = await RunKqlierAsync();
+        var result = await RunKqlierAsync("format", ".");
 
         // Assert
         Assert.Equal(0, result.ExitCode);
